@@ -1,0 +1,11 @@
+meta:
+  environment: jvm
+  toolchain:
+    name: maven
+    version: 17
+
+build:
+  args: -Dserver.port=80 -Pproduction
+
+run:
+  jarName: bag-end.jar

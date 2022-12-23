@@ -8,19 +8,14 @@ from reportlab.lib.pagesizes import letter
 import fitz
 import openpyxl
 
-
+from flask import *
 
 app = Flask(__name__)
 
 
-wb = openpyxl.open("C:/Users/79858/Documents/Flask-App-F/static/files/data.xlsx")
-sheet = wb.active
-# Имя файла в котором ищу номера ярлыков
-filename = 'C:/Users/79858/Documents/Flask-App-F/static/files/original.pdf'
-pdf = fitz.open(filename)
-# read your existing PDF
-existing_pdf = PdfFileReader(open("C:/Users/79858/Documents/Flask-App-F/static/files/original.pdf", "rb"))
-output = PdfFileWriter()
+
+
+
 
 UPLOAD_FOLDER = 'C:/Users/79858/Documents/Flask-App-F/static/files/'
 ALLOWED_EXTENSIONS = set(['pdf', 'jpg', 'jpeg', 'gif'])
@@ -29,9 +24,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # app.config['C:\Users\79858\Documents\Flask-App-F\UPLOAD_FOLDER']
 
 menu = [
-    {"name": "Установка", "url": "install-flask"},
-    {"name": "Первое приложение", "url": "first-app"},
-    {"name": "Обратная связь", "url": "contact"},
+    {"name": "Главная", "url": "install-flask"},
+    # {"name": "Не главная", "url": "first-app"},
+    {"name": "Конвертация", "url": "contact"},
 ]
 
 @app.route("/")
@@ -46,7 +41,7 @@ def about():
 def contact():
     if request.method == 'POST':
         print(request.form)
-    return render_template('contact.html', title="Обратная связь", menu=menu)
+    return render_template('contact.html', title="Конвертация", menu=menu)
 
 @app.route("/base")
 def base():
@@ -61,6 +56,14 @@ def uploader_file():
    if request.method == 'POST':
         f = request.files['file']
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
+        f1 = request.files['file1']
+        f1.save(os.path.join(app.config['UPLOAD_FOLDER'], f1.filename))
+        sheet = openpyxl.open("C:/Users/79858/Documents/Flask-App-F/static/files/data.xlsx").active
+        # Имя файла в котором ищу номера ярлыков
+        pdf = fitz.open('C:/Users/79858/Documents/Flask-App-F/static/files/original.pdf')
+        # read your existing PDF
+        existing_pdf = PdfFileReader(open("C:/Users/79858/Documents/Flask-App-F/static/files/original.pdf", "rb"))
+        output = PdfFileWriter()
         # Массив в котором ищу на какой странице этот ярлык
         for i in range(3, sheet.max_row+1):
             # print(i[0])
@@ -92,7 +95,12 @@ def uploader_file():
         outputStream = open("addedindexes.pdf", "wb")
         output.write(outputStream)
         outputStream.close()
-        return 'file uploaded successfully'
+        return render_template('download.html')
+
+@app.route('/download')
+def download():
+    filename = 'addedindexes.pdf'
+    return send_file(filename,as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(port=8080)
