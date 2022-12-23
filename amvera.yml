@@ -6,4 +6,4 @@ meta:
 
 run:
   command: gunicorn --bind 0.0.0.0:80 app:app
-  containerPort: 80
+  containerPort: 5000
