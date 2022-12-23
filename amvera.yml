@@ -1,11 +1,9 @@
 meta:
-  environment: jvm
+  environment: python
   toolchain:
     name: pip
-
-build:
-  args: -Dserver.port=80 -Pproduction
+    version: 3.10
 
 run:
- command: gunicorn --bind 0.0.0.0:5000 app:app
- containerPort: 5000
+  command: gunicorn --bind 0.0.0.0:80 app:app
+  containerPort: 5000
