@@ -24,11 +24,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # app.config['C:\Users\79858\Documents\Flask-App-F\UPLOAD_FOLDER']
 
 menu = [
-    {"name": "Главная", "url": "install-flask"},
+    {"name": "Главная", "url": "index"},
     # {"name": "Не главная", "url": "first-app"},
     {"name": "Конвертация", "url": "contact"},
 ]
 
+@app.route("/index")
 @app.route("/")
 def index():
     return render_template('index.html', menu=menu)
