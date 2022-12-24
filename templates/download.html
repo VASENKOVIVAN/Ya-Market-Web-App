@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+{{ super () }}
+
+<form action="/download" method="get">
+    <h1>Все гуд!</h1>
+    <p>Можно скачивать:</p>
+    <button class="btn">Download</button>
+</form>
+
+{% endblock %}

@@ -7,33 +7,31 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 import fitz
 import openpyxl
-
-
+from flask_cors import CORS
+from flask import *
 
 app = Flask(__name__)
+cors = CORS(app)
 
 
-wb = openpyxl.open("C:/Users/79858/Documents/Flask-App-F/static/files/data.xlsx")
-sheet = wb.active
-# Имя файла в котором ищу номера ярлыков
-filename = 'C:/Users/79858/Documents/Flask-App-F/static/files/original.pdf'
-pdf = fitz.open(filename)
-# read your existing PDF
-existing_pdf = PdfFileReader(open("C:/Users/79858/Documents/Flask-App-F/static/files/original.pdf", "rb"))
-output = PdfFileWriter()
+
+
 
 UPLOAD_FOLDER = 'C:/Users/79858/Documents/Flask-App-F/static/files/'
+DOWL_FOLDER = 'C:/Users/79858/Documents/Flask-App-F/templates/'
+
 ALLOWED_EXTENSIONS = set(['pdf', 'jpg', 'jpeg', 'gif'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # app.config['C:\Users\79858\Documents\Flask-App-F\UPLOAD_FOLDER']
 
 menu = [
-    {"name": "Установка", "url": "install-flask"},
-    {"name": "Первое приложение", "url": "first-app"},
-    {"name": "Обратная связь", "url": "contact"},
+    {"name": "Главная", "url": "index"},
+    # {"name": "Не главная", "url": "first-app"},
+    {"name": "Конвертация", "url": "contact"},
 ]
 
+@app.route("/index")
 @app.route("/")
 def index():
     return render_template('index.html', menu=menu)
@@ -46,7 +44,7 @@ def about():
 def contact():
     if request.method == 'POST':
         print(request.form)
-    return render_template('contact.html', title="Обратная связь", menu=menu)
+    return render_template('contact.html', title="Конвертация", menu=menu)
 
 @app.route("/base")
 def base():
@@ -58,9 +56,17 @@ def upload_file():
 	
 @app.route('/uploader', methods = ['GET', 'POST'])
 def uploader_file():
-   if request.method == 'POST':
+    if request.method == 'POST':
         f = request.files['file']
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
+        f1 = request.files['file1']
+        f1.save(os.path.join(app.config['UPLOAD_FOLDER'], f1.filename))
+        sheet = openpyxl.open("C:/Users/79858/Documents/Flask-App-F/static/files/data.xlsx").active
+        # Имя файла в котором ищу номера ярлыков
+        pdf = fitz.open('C:/Users/79858/Documents/Flask-App-F/static/files/original.pdf')
+        # read your existing PDF
+        existing_pdf = PdfFileReader(open("C:/Users/79858/Documents/Flask-App-F/static/files/original.pdf", "rb"))
+        output = PdfFileWriter()
         # Массив в котором ищу на какой странице этот ярлык
         for i in range(3, sheet.max_row+1):
             # print(i[0])
@@ -86,13 +92,21 @@ def uploader_file():
                     page = existing_pdf.getPage(current_page)
                     page.mergePage(new_pdf1.getPage(0))
                     output.addPage(page)
-
-                
+                       
         # finally, write "output" to a real file
         outputStream = open("addedindexes.pdf", "wb")
         output.write(outputStream)
         outputStream.close()
-        return 'file uploaded successfully'
+        return render_template('download.html')
+
+@app.route('/download')
+def download():
+    return render_template('download.html')
+    dist_dir = 'C:/Users/79858/Documents/Flask-App-F/templates/'
+    entry = os.path.join(dist_dir, 'addedindexesss.pdf')
+    return send_file(entry)
+    # filename = 'templates/addedindexesss.pdf'
+    # return send_file(filename,as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
