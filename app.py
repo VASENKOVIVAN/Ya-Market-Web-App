@@ -18,6 +18,8 @@ cors = CORS(app)
 
 
 UPLOAD_FOLDER = 'C:/Users/79858/Documents/Flask-App-F/static/files/'
+DOWL_FOLDER = 'C:/Users/79858/Documents/Flask-App-F/templates/'
+
 ALLOWED_EXTENSIONS = set(['pdf', 'jpg', 'jpeg', 'gif'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -54,7 +56,7 @@ def upload_file():
 	
 @app.route('/uploader', methods = ['GET', 'POST'])
 def uploader_file():
-   if request.method == 'POST':
+    if request.method == 'POST':
         f = request.files['file']
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
         f1 = request.files['file1']
@@ -90,8 +92,7 @@ def uploader_file():
                     page = existing_pdf.getPage(current_page)
                     page.mergePage(new_pdf1.getPage(0))
                     output.addPage(page)
-
-                
+                       
         # finally, write "output" to a real file
         outputStream = open("addedindexes.pdf", "wb")
         output.write(outputStream)
@@ -100,8 +101,12 @@ def uploader_file():
 
 @app.route('/download')
 def download():
-    filename = 'addedindexes.pdf'
-    return send_file(filename,as_attachment=True)
+    return render_template('download.html')
+    dist_dir = 'C:/Users/79858/Documents/Flask-App-F/templates/'
+    entry = os.path.join(dist_dir, 'addedindexesss.pdf')
+    return send_file(entry)
+    # filename = 'templates/addedindexesss.pdf'
+    # return send_file(filename,as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(port=80)
+    app.run(host="0.0.0.0", port=5000)
