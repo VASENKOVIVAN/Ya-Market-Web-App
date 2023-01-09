@@ -2,10 +2,35 @@
 {% block content %}
 {{ super () }}
 
-<form action="/download" method="get">
+<!-- <form action="/download" method="get">
     <h1>Все гуд!</h1>
     <p>Можно скачивать:</p>
     <button class="btn">Download</button>
-</form>
+</form> -->
+
+<div class="form-contact">
+    <div class="form-contact3">
+        <form class="form-contact2" action="/download" method="get" enctype="multipart/form-data"
+            style="flex-direction: column">
+
+            <h1>Все гуд 😊</h1>
+            <p>Можно скачивать 👇🏼</p>
+
+            <p></p>
+            <button class="buttonn" type="submit">Скачать</button>
+        </form>
+        <p class="bott"><a href="/index" vlink="#cecece">На главную</a></p>
+    </div>
+</div>
+<div class="bott">
+    <p>Made for Vitaliy 🤘🏼</p>
+</div>
+<script src="https://snipp.ru/cdn/jquery/2.1.1/jquery.min.js"></script>
+<script>
+    $('.input-file input[type=file]').on('change', function () {
+        let file = this.files[0];
+        $(this).closest('.input-file').find('.input-file-text').html(file.name);
+    });
+</script>
 
 {% endblock %}
