@@ -16,6 +16,7 @@ from collections import Counter
 import pandas as pd
 import numpy as np
 from module_uploader import module_uploader
+import math
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -219,92 +220,187 @@ def uploader_file():
         df_pivot = df.pivot_table(values=['Количество'], index='Ваш SKU', aggfunc='sum', margins= True , margins_name='Sum').reset_index()
         print(df_pivot)
 
-        packet4 = io.BytesIO()
-        can_white_page = canvas.Canvas(packet4, pagesize=letter)
+        # packet4 = io.BytesIO()
+        # can_white_page = canvas.Canvas(packet4, pagesize=letter)
 
-        # Размер шрифта
-        font_size_white_page = 8
-        # Размер строки
-        line_size_white_page = font_size_white_page + 1
+        # # Размер шрифта
+        # font_size_white_page = 8
+        # # Размер строки
+        # line_size_white_page = font_size_white_page + 1
 
-        can_white_page.setFont('Roboto', font_size_white_page)
-        can_white_page.rotate(90)
+        # can_white_page.setFont('Roboto', font_size_white_page)
+        # can_white_page.rotate(90)
 
-        # Строка заголовков
-        can_white_page.line(
-            150,  #Длина
-            - 12,
-            15, #Начало от левого края
-            - 12,
-        )
-        can_white_page.drawString(
-            20, 
-            -22, 
-            "Кол-во"
-        )
-        can_white_page.drawString(
-            50, 
-            -22, 
-            "Артикул"
-        )
-        can_white_page.line(
-            150,  #Длина
-            - 26,
-            15, #Начало от левого края
-            - 26,
-        )
+        # # Строка заголовков
+        # can_white_page.line(
+        #     150,  #Длина
+        #     - 12,
+        #     15, #Начало от левого края
+        #     - 12,
+        # )
+        # can_white_page.drawString(
+        #     20, 
+        #     -22, 
+        #     "Кол-во"
+        # )
+        # can_white_page.drawString(
+        #     50, 
+        #     -22, 
+        #     "Артикул"
+        # )
+        # can_white_page.line(
+        #     150,  #Длина
+        #     - 26,
+        #     15, #Начало от левого края
+        #     - 26,
+        # )
 
-        for total_pivot in range(0, len(df_pivot)):
+        count_white_pages = math.ceil(len(df_pivot)/35)
+        print("Вот столько листов нада: ", count_white_pages)
 
-            # Количество
-            can_white_page.drawString(
-                    27, 
-                    -33 - (total_pivot*line_size_white_page), 
-                    str(df_pivot.iat[total_pivot,1])   
-                )
+        
+        
+        for white_pages_num in range(0, count_white_pages):
+            print("Это страница: ", white_pages_num)
 
-            # Артикулы
-            if total_pivot == len(df_pivot)-1:
-                can_white_page.drawString(
-                    50, 
-                    -33 - (total_pivot*line_size_white_page), 
-                    "ИТОГО ТОВАРОВ"
-                )
-            else:
-                for j in range(2, sheet_sku_data_base.max_row+1):
-                    # Если я нашел этот sku в базе, то пишу его на странице pdf
-                    if (str(df_pivot.iat[total_pivot,0])) == (sheet_sku_data_base[j][1].value):
-                        can_white_page.drawString(
-                                50, 
-                                -33 - (total_pivot  * line_size_white_page), 
-                                str(sheet_sku_data_base[j][2].value)   
-                        )
-            
-            # Линии
+            packet4 = io.BytesIO()
+            can_white_page = canvas.Canvas(packet4, pagesize=letter)
+
+            # Размер шрифта
+            font_size_white_page = 8
+            # Размер строки
+            line_size_white_page = font_size_white_page + 1
+
+            can_white_page.setFont('Roboto', font_size_white_page)
+            can_white_page.rotate(90)
+
+            # Строка заголовков
             can_white_page.line(
-                    150,  #Длина
-                    - 34 - (total_pivot * line_size_white_page + 1),
-                    15, #Начало от левого края
-                    - 34 - (total_pivot * line_size_white_page + 1),
+                150,  #Длина
+                - 12,
+                15, #Начало от левого края
+                - 12,
+            )
+            can_white_page.drawString(
+                20, 
+                -22, 
+                "Кол-во"
+            )
+            can_white_page.drawString(
+                50, 
+                -22, 
+                "Артикул"
+            )
+            can_white_page.line(
+                150,  #Длина
+                - 26,
+                15, #Начало от левого края
+                - 26,
+            )
+            
+            line_num = 0
+
+            for total_pivot in range(white_pages_num*35, (white_pages_num+1)*35):
+
+
+                print("total_pivot - ", total_pivot)
+                print("Длина - ", len(df_pivot))
+
+                
+                if total_pivot == len(df_pivot):
+                    break
+                 # Количество
+                can_white_page.drawString(
+                        27, 
+                        -33 - (line_num * line_size_white_page), 
+                        str(df_pivot.iat[total_pivot,1])   
                     )
+
+                # Артикулы
+                if total_pivot == len(df_pivot)-1:
+                    can_white_page.drawString(
+                        50, 
+                        -33 - (line_num * line_size_white_page), 
+                        "ИТОГО ТОВАРОВ"
+                    )
+                else:
+                    for j in range(2, sheet_sku_data_base.max_row+1):
+                        # Если я нашел этот sku в базе, то пишу его на странице pdf
+                        if (str(df_pivot.iat[total_pivot,0])) == (sheet_sku_data_base[j][1].value):
+                            can_white_page.drawString(
+                                    50, 
+                                    -33 - (line_num  * line_size_white_page), 
+                                    str(sheet_sku_data_base[j][2].value)   
+                            )
+                
+                # Линии
+                can_white_page.line(
+                        150,  #Длина
+                        - 34 - (line_num * line_size_white_page + 1),
+                        15, #Начало от левого края
+                        - 34 - (line_num * line_size_white_page + 1),
+                        )
+                        
+                line_num = line_num + 1
+                
+            can_white_page.save()
+
+            #move to the beginning of the StringIO buffer
+            packet4.seek(1)
+            new_pdf4 = PdfFileReader(packet4)
+
+            page = white_page.getPage(white_pages_num)
+            page.mergePage(new_pdf4.getPage(0))
+            output.addPage(page)
+
+
+
+
+
+        # for total_pivot in range(0, len(df_pivot)):
+
+        #     # Количество
+        #     can_white_page.drawString(
+        #             27, 
+        #             -33 - (total_pivot*line_size_white_page), 
+        #             str(df_pivot.iat[total_pivot,1])   
+        #         )
+
+        #     # Артикулы
+        #     if total_pivot == len(df_pivot)-1:
+        #         can_white_page.drawString(
+        #             50, 
+        #             -33 - (total_pivot*line_size_white_page), 
+        #             "ИТОГО ТОВАРОВ"
+        #         )
+        #     else:
+        #         for j in range(2, sheet_sku_data_base.max_row+1):
+        #             # Если я нашел этот sku в базе, то пишу его на странице pdf
+        #             if (str(df_pivot.iat[total_pivot,0])) == (sheet_sku_data_base[j][1].value):
+        #                 can_white_page.drawString(
+        #                         50, 
+        #                         -33 - (total_pivot  * line_size_white_page), 
+        #                         str(sheet_sku_data_base[j][2].value)   
+        #                 )
+            
+        #     # Линии
+        #     can_white_page.line(
+        #             150,  #Длина
+        #             - 34 - (total_pivot * line_size_white_page + 1),
+        #             15, #Начало от левого края
+        #             - 34 - (total_pivot * line_size_white_page + 1),
+        #             )
             
 
-        can_white_page.save()
+        # can_white_page.save()
 
-        #move to the beginning of the StringIO buffer
-        packet4.seek(1)
-        new_pdf4 = PdfFileReader(packet4)
+        # #move to the beginning of the StringIO buffer
+        # packet4.seek(1)
+        # new_pdf4 = PdfFileReader(packet4)
 
-        page = white_page.getPage(0)
-        page.mergePage(new_pdf4.getPage(0))
-        output.addPage(page)
-
-
-        
-        
-
-
-
+        # page = white_page.getPage(0)
+        # page.mergePage(new_pdf4.getPage(0))
+        # output.addPage(page)
 
         # finally, write "output" to a real file
         outputStream = open("addedindexes.pdf", "wb")
