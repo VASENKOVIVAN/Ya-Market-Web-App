@@ -15,20 +15,26 @@ from flask import *
 from collections import Counter
 import pandas as pd
 import numpy as np
+from module_uploader import module_uploader
 
 app = Flask(__name__)
 cors = CORS(app)
 
 UPLOAD_FOLDER = 'C:/Users/79858/Documents/Flask-App-F/static/files/'
 DOWL_FOLDER = 'C:/Users/79858/Documents/Flask-App-F/templates/'
-
 ALLOWED_EXTENSIONS = set(['pdf', 'jpg', 'jpeg', 'gif'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# df = pd.read_excel('C:/Users/79858/Documents/Flask-App-F/static/files/tttfirst_mile_shipment_orders_41681422_2022-12-21-2.xlsx')
-# result = df.sort_values('testtw')
-# print(df.head)
-# app.config['C:\Users\79858\Documents\Flask-App-F\UPLOAD_FOLDER']
+# df = pd.read_excel('C:/Users/79858/Documents/Flask-App-F/static/files/tttfirst_mile_shipment_orders_41681422_2022-12-21-2.xlsx', header=0, skiprows=1)
+# df.sort_values(by=['Ваш SKU'], inplace=True)
+# print(df)
+# # print("Всего строк: ", len(df))
+# # print("Всего строк2: ", df.iloc[2]['Ваш номер заказа'])
+# # print(df.groupby('Ваш SKU')[['Количество']].sum())
+# # teetts = df.groupby('Ваш SKU')[['Количество']].sum()
+# # print("cfkjsdhkjfhsld - ",teetts.iat[2,0])
+# df_pivot = df.pivot_table(values=['Количество'], index='Ваш SKU', aggfunc='sum').reset_index()
+# print(df_pivot)
 
 menu = [
     {"name": "Главная", "url": "index"},
@@ -58,13 +64,19 @@ def base():
 @app.route('/upload')
 def upload_file():
    return render_template('upload.html')
-	
+
+# @app.route('/uploader', methods = ['GET', 'POST'])
+# def uploader_file():
+#     module_uploader()
+#     return render_template('download.html')
+
 @app.route('/uploader', methods = ['GET', 'POST'])
 def uploader_file():
     if request.method == 'POST':
 
         folder_files_saving = "C:/Users/79858/Documents/Flask-App-F/static/files/"
         folder_files_data = "C:/Users/79858/Documents/Flask-App-F/static/data/"
+        folder_white_page = "C:/Users/79858/Documents/Flask-App-F/static/data/"
 
         f = request.files['file']
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
@@ -75,48 +87,52 @@ def uploader_file():
         filename_excel= f1.filename
 
         if filename_pdf[len(filename_pdf)-3:len(filename_pdf)] == "pdf":
-            sheet_export_ya = openpyxl.open(folder_files_saving + filename_excel).active
+            # sheet_export_ya = openpyxl.open(folder_files_saving + filename_excel).active
+            sheet_export_ya = pd.read_excel(folder_files_saving + filename_excel, header=0, skiprows=1)
+            sheet_export_ya.sort_values(by=['Ваш SKU'], inplace=True)
+            # print(df)
             # Имя файла в котором ищу номера ярлыков
             pdf = fitz.open(folder_files_saving + filename_pdf)
             # read your existing PDF
             existing_pdf = PdfFileReader(open(folder_files_saving + filename_pdf, "rb"))
+            white_page = PdfFileReader(open(folder_white_page + "white_page.pdf", "rb"))
         else:
-            sheet_export_ya = openpyxl.open(folder_files_saving + filename_pdf).active
+            # sheet_export_ya = openpyxl.open(folder_files_saving + filename_pdf).active
+            sheet_export_ya = pd.read_excel(folder_files_saving + filename_pdf, header=0, skiprows=1)
+            sheet_export_ya.sort_values(by=['Ваш SKU'], inplace=True)
             # Имя файла в котором ищу номера ярлыков
             pdf = fitz.open(folder_files_saving + filename_excel)
             # read your existing PDF
             existing_pdf = PdfFileReader(open(folder_files_saving + filename_excel, "rb"))
+            white_page = PdfFileReader(open(folder_white_page + "white_page.pdf", "rb"))
 
         sheet_sku_data_base = openpyxl.open(folder_files_data + "sku-data-base.xlsx").active
         output = PdfFileWriter()
 
-        print("ТАК ТАК ТК: " , (sheet_export_ya.max_row))
-
         musical_notes = []
-        for i in range(3, sheet_export_ya.max_row+1):
-            musical_notes.append(int(sheet_export_ya[i][1].value))
+        for i in range(0, len(sheet_export_ya)):
+            musical_notes.append(int(sheet_export_ya.iloc[i]['Ваш номер заказа']))
         
         c = Counter(musical_notes)
-        print("И ЧО??????????? - ", c)
-
         searched_pages_on_pdf = []
 
         # Цикл в котором пробегаю по столбцу с номерами заказов из таблицы экспорта
-        for i in range(3, sheet_export_ya.max_row+1):
+        for i in range(0, len(sheet_export_ya)):
             # Переменная, хранящая номер заказа из таблицы экспорта
-            search_sku_in_sheet_ya = sheet_export_ya[i][1].value
+            # search_sku_in_sheet_ya = sheet_export_ya[i][1].value
+            search_sku_in_sheet_ya = str(sheet_export_ya.iloc[i]['Ваш номер заказа'])
             # Цикл в котором пробегаю по каждой странице в pdf и ищу на какой странице этот номер заказа
             for current_page in range(len(pdf)):
                 page = pdf.load_page(current_page)
                 # Если я нашел страницу на которой этот номер заказа
                 if page.search_for(search_sku_in_sheet_ya):
-                    print('\n' + '%s найдено на %i странице' % (search_sku_in_sheet_ya, current_page + 1))
+                    # print('\n' + '%s найдено на %i странице' % (search_sku_in_sheet_ya, current_page + 1))
                     searched_pages_on_pdf.append(current_page)
-                    print("Найдены страницы: ", searched_pages_on_pdf)
+                    # print("Найдены страницы: ", searched_pages_on_pdf)
                     # Беру sku этого заказа и ищу его в базе транслейта
                     for j in range(2, sheet_sku_data_base.max_row+1):
                         # Если я нашел этот sku в базе, то пишу его на странице pdf
-                        if (sheet_export_ya[i][3].value) == (sheet_sku_data_base[j][1].value):
+                        if (sheet_export_ya.iloc[i]['Ваш SKU']) == (sheet_sku_data_base[j][1].value):
 
                             # print(
                             #     "Это 1: ", (sheet_export_ya[i][3].value),"\n",
@@ -129,29 +145,29 @@ def uploader_file():
                             pdfmetrics.registerFont(TTFont('Roboto', 'Roboto-Medium.ttf'))
                             can.setFont('Roboto', 6)
                             can.rotate(90)
-                            print(
-                                        "Цикл: " + 
-                                        str(int(i)) 
-                                        # ", " + 
-                                        # (sheet_export_ya[i][1].value) + 
-                                        # ", " + 
-                                        # (sheet_export_ya[i+1][1].value)
-                                    )
+                            # print(
+                            #             "Цикл: " + 
+                            #             str(int(i)) 
+                            #             # ", " + 
+                            #             # (sheet_export_ya[i][1].value) + 
+                            #             # ", " + 
+                            #             # (sheet_export_ya[i+1][1].value)
+                            #         )
 
                             can.drawString(
                                 120, 
                                 -338, 
                                 str((sheet_sku_data_base[j][2].value)) + 
                                 ' (' + 
-                                str(int(sheet_export_ya[i][5].value)) + 
-                                'pcs)'
+                                str(int(sheet_export_ya.iloc[i]['Количество'])) + 
+                                ' шт.)'
                             )
-                            print(
-                                str((sheet_sku_data_base[j][2].value)) + 
-                                ' (' + 
-                                str(int(sheet_export_ya[i][5].value)) + 
-                                'pcs)'
-                            )
+                            # print(
+                            #     str((sheet_sku_data_base[j][2].value)) + 
+                            #     ' (' + 
+                            #     str(int(sheet_export_ya.iloc[i]['Количество'])) + 
+                            #     'pcs)'
+                            # )
 
                             can.save()
 
@@ -197,6 +213,99 @@ def uploader_file():
                 output.addPage(page)
 
 
+        df = sheet_export_ya
+        df.sort_values(by=['Ваш SKU'], inplace=True)
+        print(df)
+        df_pivot = df.pivot_table(values=['Количество'], index='Ваш SKU', aggfunc='sum', margins= True , margins_name='Sum').reset_index()
+        print(df_pivot)
+
+        packet4 = io.BytesIO()
+        can_white_page = canvas.Canvas(packet4, pagesize=letter)
+
+        # Размер шрифта
+        font_size_white_page = 8
+        # Размер строки
+        line_size_white_page = font_size_white_page + 1
+
+        can_white_page.setFont('Roboto', font_size_white_page)
+        can_white_page.rotate(90)
+
+        # Строка заголовков
+        can_white_page.line(
+            150,  #Длина
+            - 12,
+            15, #Начало от левого края
+            - 12,
+        )
+        can_white_page.drawString(
+            20, 
+            -22, 
+            "Кол-во"
+        )
+        can_white_page.drawString(
+            50, 
+            -22, 
+            "Артикул"
+        )
+        can_white_page.line(
+            150,  #Длина
+            - 26,
+            15, #Начало от левого края
+            - 26,
+        )
+
+        for total_pivot in range(0, len(df_pivot)):
+
+            # Количество
+            can_white_page.drawString(
+                    27, 
+                    -33 - (total_pivot*line_size_white_page), 
+                    str(df_pivot.iat[total_pivot,1])   
+                )
+
+            # Артикулы
+            if total_pivot == len(df_pivot)-1:
+                can_white_page.drawString(
+                    50, 
+                    -33 - (total_pivot*line_size_white_page), 
+                    "ИТОГО ТОВАРОВ"
+                )
+            else:
+                for j in range(2, sheet_sku_data_base.max_row+1):
+                    # Если я нашел этот sku в базе, то пишу его на странице pdf
+                    if (str(df_pivot.iat[total_pivot,0])) == (sheet_sku_data_base[j][1].value):
+                        can_white_page.drawString(
+                                50, 
+                                -33 - (total_pivot  * line_size_white_page), 
+                                str(sheet_sku_data_base[j][2].value)   
+                        )
+            
+            # Линии
+            can_white_page.line(
+                    150,  #Длина
+                    - 34 - (total_pivot * line_size_white_page + 1),
+                    15, #Начало от левого края
+                    - 34 - (total_pivot * line_size_white_page + 1),
+                    )
+            
+
+        can_white_page.save()
+
+        #move to the beginning of the StringIO buffer
+        packet4.seek(1)
+        new_pdf4 = PdfFileReader(packet4)
+
+        page = white_page.getPage(0)
+        page.mergePage(new_pdf4.getPage(0))
+        output.addPage(page)
+
+
+        
+        
+
+
+
+
         # finally, write "output" to a real file
         outputStream = open("addedindexes.pdf", "wb")
         output.write(outputStream)
@@ -215,3 +324,5 @@ def download():
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
     # app.run(host = 'localhost', debug = True)
+
+    
