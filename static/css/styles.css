@@ -4,7 +4,7 @@ h2 {
   color: #606060;
 }
 ul {
-  list-style: none; 
+  list-style: none;
   margin: 0 auto;
 }
 a {
@@ -22,7 +22,7 @@ nav {
 }
 
 .mainmenu ul {
-  display: -webkit-flex; 
+  display: -webkit-flex;
   display: flex;
   background: #FFD7A7;
   padding-left: 0;
@@ -45,11 +45,11 @@ nav {
   /* background-color: #c0c0c0; */
   color: rgb(217, 217, 217);
   /* width: max-content; */
-  /* height: 40vh; */
+  height: 50vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
 }
 .form-contact div {
   width: max-content;
@@ -76,8 +76,8 @@ nav {
 	border-radius: 10px 10px 0 0 ;
 	border: 1px solid rgba(221, 221, 221, 0.663);
 }
-.input-file-btn { 
-  position: relative; 
+.input-file-btn {
+  position: relative;
 	width: 100%;
 
 	display: inline-block;
@@ -106,12 +106,12 @@ nav {
 	width: 0;
 	height: 0;
 }
- 
+
 /* Focus */
 .input-file input[type=file]:focus + .input-file-btn {
 	box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
 }
- 
+
 /* Hover/active */
 .input-file:hover .input-file-btn {
 	background-color: #8559be;
@@ -119,7 +119,7 @@ nav {
 .input-file:active .input-file-btn {
 	background-color: #612e70;
 }
- 
+
 /* Disabled */
 .input-file input[type=file]:disabled + .input-file-btn {
 	background-color: #eee;
@@ -141,7 +141,7 @@ nav {
   display: inline-block;
   font-size: 16px;
   font-weight: 800;
-  transition-duration: 0.4s; 
+  transition-duration: 0.4s;
   border-radius: 10px;
 }
 
@@ -171,7 +171,7 @@ nav {
 
 span, p{
   font-family: Helvetica, sans-serif;
- } 
+ }
 .bott{
   text-align:  center;
   color: rgb(217, 217, 217);

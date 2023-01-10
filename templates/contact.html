@@ -1,26 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
 {{ super () }}
-<!-- <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <link type="text/css" href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet" />
-    <link type="text/css" href="/static/css/styles.css" rel="stylesheet" />
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    {% block title %} {% if title %}
-    <title>Про Flask - {{ title }}</title>
-    {% else %}
-    <title>Про Flask</title>
-    {% endif %} {% endblock title %}
-</head>
-
-<body class="mainbody"> -->
-
-
-
 
 <!-- <form action="/contact" method="post" class="form-contact">
     <p>
@@ -37,30 +17,29 @@
     <p>
         <input type="submit" value="Отправить" />
 </form> -->
-<div class="bott" style="margin-top: 100px; font-size: 36px;">
+<div class="bott" style="margin-top: 70px; font-size: 36px;">
     <p>🌙</p>
 </div>
 <div class="form-contact">
-    <div class="form-contact4">
+    <div class="form-contact3">
         <form class="form-contact2" action="/uploader" method="POST" enctype="multipart/form-data"
             style="flex-direction: column">
 
             <label class="input-file">
                 <span class="input-file-text" type="text"></span>
                 <input type="file" name="file">
-                <span class="input-file-btn">Выберите файл PDF</span>
+                <span class="input-file-btn">Файл PDF</span>
             </label>
 
             <label class="input-file">
                 <span class="input-file-text" type="text"></span>
                 <input type="file" name="file1" title="123">
-                <span type="file" name="file1" class="input-file-btn">Выберите файл EXCEL</span>
+                <span type="file" name="file1" class="input-file-btn">Файл EXCEL</span>
             </label>
 
             <p></p>
             <button class="buttonn" type="submit">Сделать магию</button>
         </form>
-        <p class="bott"><a href="/index" vlink="#cecece">На главную</a></p>
     </div>
 </div>
 <div class="bott">
@@ -78,7 +57,6 @@
     });
 </script>
 
-<!-- </body> -->
-<!-- 
-</html> -->
+
+
 {% endblock %}
