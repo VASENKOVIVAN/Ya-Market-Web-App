@@ -2,18 +2,34 @@
 {% block content %}
 {{ super () }}
 
-
+<div class="first_title_row">
+    <p>🌙</p>
+</div>
+<div class="area">
+    <ul class="circles">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+    </ul>
+</div>
 <div class="container_form_load">
-    <div class="form_load">
+    <div class="form_load" style="z-index: 10000;">
         <form class="form-contact2" action="/download" method="get" enctype="multipart/form-data"
             style="flex-direction: column; align-items: center">
 
             <h1 style="align-items: center;">Все гуд</h1>
-            <h1 style="align-items: center;">😊</h1>
-            <p style="align-items: center;">Можно скачивать</p>
-            <p style="align-items: center;">👇</p>
+            <h1 style="align-items: center;  margin-top: 0px">😊</h1>
+            <p style="align-items: center; margin-top: 5px">Можно скачивать</p>
+            <p style="align-items: center; margin-top: 0px">👇</p>
             <!-- <p></p> -->
-            <button class="buttonn" type="submit">Скачать</button>
+            <button class="buttonn" tyle=" z-index: 10000;" type="submit">Скачать</button>
             <a class="go_main_a" href="/index" vlink="#cecece" style="text-decoration: underline; margin-top: 20px;">На
                 главную</a>
         </form>
@@ -25,7 +41,10 @@
 </div>
 
 <div class="bottom_title_row">
-    <p>Made for Vitaliy 🤘🏼</p>
+    <p class="made_for_vitaliy">Made for Vitaliy 🤘🏼</p>
+</div>
+
+<div class="bottom_transparent">
 </div>
 
 
