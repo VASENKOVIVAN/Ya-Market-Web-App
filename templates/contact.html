@@ -2,58 +2,91 @@
 {% block content %}
 {{ super () }}
 
-<!-- <form action="/contact" method="post" class="form-contact">
-    <p>
-        <label>Имя:</label>
-        <input type="text" name="username" value="" requied />
-    <p>
-        <label>Email:</label>
-        <input type-"text" name="email" value="" requied />
-    <p>
-        <label>Сообщение:</label>
-    <p>
-        <textarea name="message" rows=7 cols=40>
-        </textarea>
-    <p>
-        <input type="submit" value="Отправить" />
-</form> -->
-<div class="bott" style="margin-top: 70px; font-size: 36px;">
+
+<div class="first_title_row">
     <p>🌙</p>
 </div>
-<div class="form-contact">
-    <div class="form-contact3">
+
+<div class="container_form_load">
+    <div class="form_load">
         <form class="form-contact2" action="/uploader" method="POST" enctype="multipart/form-data"
             style="flex-direction: column">
 
             <label class="input-file">
                 <span class="input-file-text" type="text"></span>
-                <input type="file" name="file">
+                <input type="file" id="file" name="file" required>
                 <span class="input-file-btn">Файл PDF</span>
             </label>
 
             <label class="input-file">
                 <span class="input-file-text" type="text"></span>
-                <input type="file" name="file1" title="123">
+                <input type="file" id="file1" name="file1" title="123" required>
                 <span type="file" name="file1" class="input-file-btn">Файл EXCEL</span>
             </label>
 
             <p></p>
-            <button class="buttonn" type="submit">Сделать магию</button>
+
+            <!-- <button id="button_magic" class="buttonn" style="display:flex;" type="submit" onclick="myFunction()">
+                Сделать магию
+            </button>
+
+            <button id="loader" style="display:none;" class="buttonn" type="submit">
+                <div class="donut"></div>
+            </button> -->
+
+            <button class="buttonn" style="display:flex;" type="submit" onclick="myFunction()">
+                <div id="button_magic">Сделать магию</div>
+                <div id="loader" style="display:none;" class="donut"></div>
+            </button>
+
+
+            <!-- <button class="buttonn" type="submit"> -->
+
+            <!-- </button> -->
+
+
         </form>
     </div>
 </div>
-<div class="bott">
+
+<div class="bottom_title_row">
     <p>Made for Vitaliy 🤘🏼</p>
 </div>
+
+<script>
+
+</script>
+
 <script src="https://snipp.ru/cdn/jquery/2.1.1/jquery.min.js"></script>
 <script>
+
+    var myVar;
+
+    function myFunction() {
+
+        if ((document.getElementById("file").value.length == 0) || (document.getElementById("file1").value.length == 0)) {
+            alert("ВЫБЕРИТЕ ФАЙЛЫ!")
+        } else {
+            document.getElementById("loader").style.display = "flex";
+            document.getElementById("button_magic").style.display = "none";
+        }
+
+    }
+
     $('.input-file input[type=file]').on('change', function () {
         let file = this.files[0];
-        $(this).closest('.input-file').find('.input-file-text').html(
-            file.name.substr(0, 15) +
-            "  ...  " +
-            file.name.substr(file.name.length - 14, 14)
-        );
+        if (file.name.length > 30) {
+            $(this).closest('.input-file').find('.input-file-text').html(
+                file.name.substr(0, 15) +
+                "  ...  " +
+                file.name.substr(file.name.length - 14, 14)
+            );
+        } else {
+            $(this).closest('.input-file').find('.input-file-text').html(
+                file.name
+            );
+        }
+
     });
 </script>
 

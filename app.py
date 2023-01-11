@@ -87,35 +87,27 @@ def uploader_file():
         f1.save(os.path.join(app.config['UPLOAD_FOLDER'], f1.filename))
         filename_excel= f1.filename
 
+        # Если в первое окно загрузили не тот формат
         if filename_pdf[len(filename_pdf)-3:len(filename_pdf)] == "pdf":
-            # sheet_export_ya = openpyxl.open(folder_files_saving + filename_excel).active
             sheet_export_ya = pd.read_excel(folder_files_saving + filename_excel, header=0, skiprows=1)
-            sheet_export_ya.sort_values(by=['Ваш SKU'], inplace=True)
-            # print(df)
-            # Имя файла в котором ищу номера ярлыков
             pdf = fitz.open(folder_files_saving + filename_pdf)
-            # read your existing PDF
             existing_pdf = PdfFileReader(open(folder_files_saving + filename_pdf, "rb"))
-            white_page = PdfFileReader(open(folder_white_page + "white_page.pdf", "rb"))
         else:
-            # sheet_export_ya = openpyxl.open(folder_files_saving + filename_pdf).active
             sheet_export_ya = pd.read_excel(folder_files_saving + filename_pdf, header=0, skiprows=1)
-            sheet_export_ya.sort_values(by=['Ваш SKU'], inplace=True)
-            # Имя файла в котором ищу номера ярлыков
             pdf = fitz.open(folder_files_saving + filename_excel)
-            # read your existing PDF
             existing_pdf = PdfFileReader(open(folder_files_saving + filename_excel, "rb"))
-            white_page = PdfFileReader(open(folder_white_page + "white_page.pdf", "rb"))
+
+        white_page = PdfFileReader(open(folder_white_page + "white_page.pdf", "rb"))
+        # Сортирую таблицу экспорта по SKU
+        sheet_export_ya.sort_values(by=['Ваш SKU'], inplace=True)
 
         sheet_sku_data_base = openpyxl.open(folder_files_data + "sku-data-base.xlsx").active
         output = PdfFileWriter()
 
-        musical_notes = []
-        for i in range(0, len(sheet_export_ya)):
-            musical_notes.append(int(sheet_export_ya.iloc[i]['Ваш номер заказа']))
-        
-        c = Counter(musical_notes)
+        # Массив, в который запишу номера страниц из PDF, которые есть в таблице экспорта
         searched_pages_on_pdf = []
+
+        
 
         # Цикл в котором пробегаю по столбцу с номерами заказов из таблицы экспорта
         for i in range(0, len(sheet_export_ya)):
@@ -129,31 +121,23 @@ def uploader_file():
                 if page.search_for(search_sku_in_sheet_ya):
                     # print('\n' + '%s найдено на %i странице' % (search_sku_in_sheet_ya, current_page + 1))
                     searched_pages_on_pdf.append(current_page)
-                    # print("Найдены страницы: ", searched_pages_on_pdf)
+
+                    print("Найдены страницы: ", searched_pages_on_pdf)
+
+                    # Переменная счетчик, если в базе не будет найдет этот артикул, то подставь оригинальный
+                    counter_my = 0
+
                     # Беру sku этого заказа и ищу его в базе транслейта
                     for j in range(2, sheet_sku_data_base.max_row+1):
+                        
                         # Если я нашел этот sku в базе, то пишу его на странице pdf
                         if (sheet_export_ya.iloc[i]['Ваш SKU']) == (sheet_sku_data_base[j][1].value):
-
-                            # print(
-                            #     "Это 1: ", (sheet_export_ya[i][3].value),"\n",
-                            #     "Это 2: ", (sheet_sku_data_base[j][1].value),"\n",
-                            #     "Это 3: ", str((sheet_sku_data_base[j][2].value)),"\n",
-                            # )
 
                             packet1 = io.BytesIO()
                             can = canvas.Canvas(packet1, pagesize=letter)
                             pdfmetrics.registerFont(TTFont('Roboto', 'Roboto-Medium.ttf'))
                             can.setFont('Roboto', 6)
                             can.rotate(90)
-                            # print(
-                            #             "Цикл: " + 
-                            #             str(int(i)) 
-                            #             # ", " + 
-                            #             # (sheet_export_ya[i][1].value) + 
-                            #             # ", " + 
-                            #             # (sheet_export_ya[i+1][1].value)
-                            #         )
 
                             can.drawString(
                                 120, 
@@ -163,12 +147,14 @@ def uploader_file():
                                 str(int(sheet_export_ya.iloc[i]['Количество'])) + 
                                 ' шт.)'
                             )
-                            # print(
-                            #     str((sheet_sku_data_base[j][2].value)) + 
-                            #     ' (' + 
-                            #     str(int(sheet_export_ya.iloc[i]['Количество'])) + 
-                            #     'pcs)'
-                            # )
+
+                            print(
+                                str((sheet_sku_data_base[j][2].value)) + 
+                                ' (' + 
+                                str(int(sheet_export_ya.iloc[i]['Количество'])) + 
+                                ' шт.)'
+                            )
+                        
 
                             can.save()
 
@@ -180,15 +166,49 @@ def uploader_file():
                             page = existing_pdf.getPage(current_page)
                             page.mergePage(new_pdf1.getPage(0))
                             output.addPage(page)
-                # else:
-                #     page = existing_pdf.getPage(current_page)
-                #     page.mergePage(new_pdf1.getPage(0))
-                #     output.addPage(page)
+                            counter_my = counter_my + 1
+
+                        if ((sheet_sku_data_base.max_row+1) == (j + 1)) and (counter_my == 0):
+                            print("я тутутутуту ")
+                            packet1 = io.BytesIO()
+                            can = canvas.Canvas(packet1, pagesize=letter)
+                            pdfmetrics.registerFont(TTFont('Roboto', 'Roboto-Medium.ttf'))
+                            can.setFont('Roboto', 6)
+                            can.rotate(90)
+
+                            can.drawString(
+                                120, 
+                                -338, 
+                                str(sheet_export_ya.iloc[i]['Ваш SKU']) + 
+                                ' (' + 
+                                str(int(sheet_export_ya.iloc[i]['Количество'])) + 
+                                ' шт.)'
+                            )
+
+                            print(
+                                str((sheet_sku_data_base[j][2].value)) + 
+                                ' (' + 
+                                str(int(sheet_export_ya.iloc[i]['Количество'])) + 
+                                ' шт.)'
+                            )
+                        
+                            can.save()
+
+                            #move to the beginning of the StringIO buffer
+                            packet1.seek(0)
+                            new_pdf1 = PdfFileReader(packet1)
+                            
+                            # add the "watermark" (which is the new pdf) on the existing page
+                            page = existing_pdf.getPage(current_page)
+                            page.mergePage(new_pdf1.getPage(0))
+                            output.addPage(page)
 
 
+        # Цикл, который добавит в конец PDF страницы, заказов которых нет в экспорте с "Нет данных"
         for current_page in range(len(pdf)):
-            # for searched_pages in searched_pages_on_pdf:
+            # Если этой страницы нет в массиве найденых таблиц
             if current_page not in searched_pages_on_pdf:
+
                 print("Этого нет:",  current_page)
 
                 packet3 = io.BytesIO()
@@ -213,55 +233,18 @@ def uploader_file():
                 page.mergePage(new_pdf3.getPage(0))
                 output.addPage(page)
 
-
+        # Перевожу таблицу экспорта из яндекса в DataFrame для сводной таблицы
         df = sheet_export_ya
-        df.sort_values(by=['Ваш SKU'], inplace=True)
-        print(df)
+        # Сводная таблица
         df_pivot = df.pivot_table(values=['Количество'], index='Ваш SKU', aggfunc='sum', margins= True , margins_name='Sum').reset_index()
         print(df_pivot)
 
-        # packet4 = io.BytesIO()
-        # can_white_page = canvas.Canvas(packet4, pagesize=letter)
-
-        # # Размер шрифта
-        # font_size_white_page = 8
-        # # Размер строки
-        # line_size_white_page = font_size_white_page + 1
-
-        # can_white_page.setFont('Roboto', font_size_white_page)
-        # can_white_page.rotate(90)
-
-        # # Строка заголовков
-        # can_white_page.line(
-        #     150,  #Длина
-        #     - 12,
-        #     15, #Начало от левого края
-        #     - 12,
-        # )
-        # can_white_page.drawString(
-        #     20, 
-        #     -22, 
-        #     "Кол-во"
-        # )
-        # can_white_page.drawString(
-        #     50, 
-        #     -22, 
-        #     "Артикул"
-        # )
-        # can_white_page.line(
-        #     150,  #Длина
-        #     - 26,
-        #     15, #Начало от левого края
-        #     - 26,
-        # )
-
+        # Сколько белых страниц понадобится для вывода всей таблицы
         count_white_pages = math.ceil(len(df_pivot)/35)
         print("Вот столько листов нада: ", count_white_pages)
 
-        
-        
+        # Цикл, который выводит таблицу в конце PDF
         for white_pages_num in range(0, count_white_pages):
-            print("Это страница: ", white_pages_num)
 
             packet4 = io.BytesIO()
             can_white_page = canvas.Canvas(packet4, pagesize=letter)
@@ -270,13 +253,15 @@ def uploader_file():
             font_size_white_page = 8
             # Размер строки
             line_size_white_page = font_size_white_page + 1
+            # Длиина линии
+            line_long = 210
 
             can_white_page.setFont('Roboto', font_size_white_page)
             can_white_page.rotate(90)
 
             # Строка заголовков
             can_white_page.line(
-                150,  #Длина
+                line_long,  #Длина
                 - 12,
                 15, #Начало от левого края
                 - 12,
@@ -287,39 +272,43 @@ def uploader_file():
                 "Кол-во"
             )
             can_white_page.drawString(
-                50, 
+                55, 
                 -22, 
                 "Артикул"
             )
+            can_white_page.drawString(
+                138, 
+                -22, 
+                "SKU"
+            )
             can_white_page.line(
-                150,  #Длина
+                line_long,  #Длина
                 - 26,
                 15, #Начало от левого края
                 - 26,
             )
             
+            # Переменная-счетчик для номера строки и переноса на новую страницу 36-ой строчки
             line_num = 0
 
             for total_pivot in range(white_pages_num*35, (white_pages_num+1)*35):
 
-
-                print("total_pivot - ", total_pivot)
-                print("Длина - ", len(df_pivot))
-
-                
+                # Выход из цыкла на последней строчке таблицы
                 if total_pivot == len(df_pivot):
                     break
-                 # Количество
+                
+                # Столбец количество
                 can_white_page.drawString(
-                        27, 
+                        20, 
                         -33 - (line_num * line_size_white_page), 
                         str(df_pivot.iat[total_pivot,1])   
                     )
 
-                # Артикулы
+                # Столбец артикулы
+                # Если последняя строка, то выведу итоги
                 if total_pivot == len(df_pivot)-1:
                     can_white_page.drawString(
-                        50, 
+                        55, 
                         -33 - (line_num * line_size_white_page), 
                         "ИТОГО ТОВАРОВ"
                     )
@@ -328,19 +317,27 @@ def uploader_file():
                         # Если я нашел этот sku в базе, то пишу его на странице pdf
                         if (str(df_pivot.iat[total_pivot,0])) == (sheet_sku_data_base[j][1].value):
                             can_white_page.drawString(
-                                    50, 
+                                    55, 
                                     -33 - (line_num  * line_size_white_page), 
                                     str(sheet_sku_data_base[j][2].value)   
                             )
+
+                # Столбец артикуры изначально (SKU)
+                if total_pivot < len(df_pivot)-1:
+                    can_white_page.drawString(
+                        138, 
+                        -33 - (line_num  * line_size_white_page), 
+                        str(df_pivot.iat[total_pivot,0])
+                    )
                 
                 # Линии
                 can_white_page.line(
-                        150,  #Длина
+                        line_long,  #Длина
                         - 34 - (line_num * line_size_white_page + 1),
                         15, #Начало от левого края
                         - 34 - (line_num * line_size_white_page + 1),
                         )
-                        
+                # Счетчик линий, чтобы сделать перенос таблицы на новую страницу на 36-ой строчке 
                 line_num = line_num + 1
                 
             can_white_page.save()
@@ -352,55 +349,6 @@ def uploader_file():
             page = white_page.getPage(white_pages_num)
             page.mergePage(new_pdf4.getPage(0))
             output.addPage(page)
-
-
-
-
-
-        # for total_pivot in range(0, len(df_pivot)):
-
-        #     # Количество
-        #     can_white_page.drawString(
-        #             27, 
-        #             -33 - (total_pivot*line_size_white_page), 
-        #             str(df_pivot.iat[total_pivot,1])   
-        #         )
-
-        #     # Артикулы
-        #     if total_pivot == len(df_pivot)-1:
-        #         can_white_page.drawString(
-        #             50, 
-        #             -33 - (total_pivot*line_size_white_page), 
-        #             "ИТОГО ТОВАРОВ"
-        #         )
-        #     else:
-        #         for j in range(2, sheet_sku_data_base.max_row+1):
-        #             # Если я нашел этот sku в базе, то пишу его на странице pdf
-        #             if (str(df_pivot.iat[total_pivot,0])) == (sheet_sku_data_base[j][1].value):
-        #                 can_white_page.drawString(
-        #                         50, 
-        #                         -33 - (total_pivot  * line_size_white_page), 
-        #                         str(sheet_sku_data_base[j][2].value)   
-        #                 )
-            
-        #     # Линии
-        #     can_white_page.line(
-        #             150,  #Длина
-        #             - 34 - (total_pivot * line_size_white_page + 1),
-        #             15, #Начало от левого края
-        #             - 34 - (total_pivot * line_size_white_page + 1),
-        #             )
-            
-
-        # can_white_page.save()
-
-        # #move to the beginning of the StringIO buffer
-        # packet4.seek(1)
-        # new_pdf4 = PdfFileReader(packet4)
-
-        # page = white_page.getPage(0)
-        # page.mergePage(new_pdf4.getPage(0))
-        # output.addPage(page)
 
         # finally, write "output" to a real file
         outputStream = open("addedindexes.pdf", "wb")

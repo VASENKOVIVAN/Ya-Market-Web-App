@@ -2,14 +2,9 @@
 {% block content %}
 {{ super () }}
 
-<!-- <form action="/download" method="get">
-    <h1>Все гуд!</h1>
-    <p>Можно скачивать:</p>
-    <button class="btn">Download</button>
-</form> -->
 
-<div class="form-contact" style="margin-top: 50px">
-    <div class="form-contact4">
+<div class="container_form_load">
+    <div class="form_load">
         <form class="form-contact2" action="/download" method="get" enctype="multipart/form-data"
             style="flex-direction: column; align-items: center">
 
@@ -17,17 +12,23 @@
             <h1 style="align-items: center;">😊</h1>
             <p style="align-items: center;">Можно скачивать</p>
             <p style="align-items: center;">👇</p>
-            <p></p>
+            <!-- <p></p> -->
             <button class="buttonn" type="submit">Скачать</button>
+            <a class="go_main_a" href="/index" vlink="#cecece" style="text-decoration: underline; margin-top: 20px;">На
+                главную</a>
         </form>
-        <p class="bott"><a href="/index" vlink="#cecece" style="text-decoration: underline;">На главную</a></p>
+
+
 
 
     </div>
 </div>
-<div class="bott">
+
+<div class="bottom_title_row">
     <p>Made for Vitaliy 🤘🏼</p>
 </div>
+
+
 <script src="https://snipp.ru/cdn/jquery/2.1.1/jquery.min.js"></script>
 <script>
     $('.input-file input[type=file]').on('change', function () {
