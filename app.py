@@ -122,7 +122,7 @@ def uploader_file():
                     # print('\n' + '%s найдено на %i странице' % (search_sku_in_sheet_ya, current_page + 1))
                     searched_pages_on_pdf.append(current_page)
 
-                    print("Найдены страницы: ", searched_pages_on_pdf)
+                    # print("Найдены страницы: ", searched_pages_on_pdf)
 
                     # Переменная счетчик, если в базе не будет найдет этот артикул, то подставь оригинальный
                     counter_my = 0
