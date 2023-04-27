@@ -1,56 +1,97 @@
+# from flask import Flask, render_template, request, send_file
+# import os
+# from PyPDF2 import PdfFileWriter, PdfFileReader
+# import io
+# from reportlab.pdfgen import canvas
+# from reportlab.lib.pagesizes import letter
+# from reportlab.pdfbase.ttfonts import TTFont
+# from reportlab.pdfbase import pdfmetrics
+# from reportlab.pdfbase.pdfmetrics import registerFontFamily
+# import fitz
+# import openpyxl
+# from flask import send_from_directory
+# from os import path
+
+from flask import Flask, render_template, request
+from werkzeug.utils import secure_filename
 import os
-from flask import Flask, render_template, request, send_file
 from PyPDF2 import PdfFileWriter, PdfFileReader
 import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.pdfmetrics import registerFontFamily
 import fitz
 import openpyxl
-from flask_cors import CORS
+# from flask_cors import CORS
+from flask import *
+from collections import Counter
 import pandas as pd
+import numpy as np
 import math
 import gspread
 
 
 # Указываем путь к JSON
-gc = gspread.service_account(filename='keys/mypython-374908-4480952f882c.json')
-# gc = gspread.service_account(filename='/home/avangard3141/mysite/keys/mypython-374908-4480952f882c.json')
+gc = gspread.service_account(filename='/home/avangard3141/mysite/keys/mypython-374908-4480952f882c.json')
 
 
 app = Flask(__name__)
-cors = CORS(app)
 
-# Для pythonanywhere
-# UPLOAD_FOLDER = "/home/avangard3141/mysite/static/files/"
-# FOLDER_FILES_SAVE = "/home/avangard3141/mysite/static/files/"
-# FOLDER_WHITE_PAGE = "/home/avangard3141/mysite/static/data/"
-# FOLDER_FILES_DATA = "/home/avangard3141/mysite/static/data/"
-# FOLDER_OUTPUT_STREAM = "/home/avangard3141/mysite/addedindexes.pdf"
 
-# Для локалки
-UPLOAD_FOLDER = "C:/Users/79858/Documents/1-git/Ya-Market-Web-App/static/files/"
-FOLDER_FILES_SAVE = "C:/Users/79858/Documents/1-git/Ya-Market-Web-App/static/files/"
-FOLDER_WHITE_PAGE = "C:/Users/79858/Documents/1-git/Ya-Market-Web-App/static/data/"
-FOLDER_FILES_DATA = "C:/Users/79858/Documents/1-git/Ya-Market-Web-App/static/data/"
-FOLDER_OUTPUT_STREAM = "addedindexes.pdf"
 
+
+UPLOAD_FOLDER = '/home/avangard3141/mysite/static/files/'
+ALLOWED_EXTENSIONS = set(['pdf', 'jpg', 'jpeg', 'gif'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['FOLDER_FILES_SAVE'] = FOLDER_FILES_SAVE
-app.config['FOLDER_WHITE_PAGE'] = FOLDER_WHITE_PAGE
-app.config['FOLDER_FILES_DATA'] = FOLDER_FILES_DATA
-app.config['FOLDER_OUTPUT_STREAM'] = FOLDER_OUTPUT_STREAM
 
+# app.config['C:\Users\79858\Documents\Flask-App-F\UPLOAD_FOLDER']
 
+menu = [
+    {"name": "Главная", "url": "index"},
+    # {"name": "Не главная", "url": "first-app"},
+    {"name": "Конвертация", "url": "contact"},
+]
+
+@app.route("/index")
 @app.route("/")
 def index():
-    return render_template('index.html')
+    # return render_template('index.html', menu=menu)
+    return render_template('contact.html', menu=menu)
+
+
+@app.route("/about")
+def about():
+    return render_template('about.html', title="О сайте", menu=menu)
+
+@app.route("/contact", methods=["POST", "GET"])
+def contact():
+    if request.method == 'POST':
+        print(request.form)
+    return render_template('contact.html', title="Конвертация", menu=menu)
+
+@app.route("/base")
+def base():
+    return render_template('base.html', title="Base", menu=menu)
+
+@app.route('/upload')
+def upload_file():
+   return render_template('upload.html')
+
+
+@app.route('/updategs')
+def updategs():
+   return render_template('index.html')
 
 
 @app.route('/uploader', methods = ['GET', 'POST'])
 def uploader_file():
     if request.method == 'POST':
+
+        folder_files_saving = "/home/avangard3141/mysite/static/files/"
+        folder_files_data = "/home/avangard3141/mysite/static/data/"
+        folder_white_page = "/home/avangard3141/mysite/static/data/"
 
         f = request.files['file']
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
@@ -62,24 +103,25 @@ def uploader_file():
 
         # Если в первое окно загрузили не тот формат
         if filename_pdf[len(filename_pdf)-3:len(filename_pdf)] == "pdf":
-            sheet_export_ya = pd.read_excel(FOLDER_FILES_SAVE + filename_excel, header=0, skiprows=1)
-            pdf = fitz.open(FOLDER_FILES_SAVE + filename_pdf)
-            existing_pdf = PdfFileReader(open(FOLDER_FILES_SAVE + filename_pdf, "rb"))
+            sheet_export_ya = pd.read_excel(folder_files_saving + filename_excel, header=0, skiprows=1)
+            pdf = fitz.open(folder_files_saving + filename_pdf)
+            existing_pdf = PdfFileReader(open(folder_files_saving + filename_pdf, "rb"))
         else:
-            sheet_export_ya = pd.read_excel(FOLDER_FILES_SAVE + filename_pdf, header=0, skiprows=1)
-            pdf = fitz.open(FOLDER_FILES_SAVE + filename_excel)
-            existing_pdf = PdfFileReader(open(FOLDER_FILES_SAVE + filename_excel, "rb"))
+            sheet_export_ya = pd.read_excel(folder_files_saving + filename_pdf, header=0, skiprows=1)
+            pdf = fitz.open(folder_files_saving + filename_excel)
+            existing_pdf = PdfFileReader(open(folder_files_saving + filename_excel, "rb"))
 
-        white_page = PdfFileReader(open(FOLDER_WHITE_PAGE + "white_page.pdf", "rb"))
-        
+        white_page = PdfFileReader(open(folder_white_page + "white_page.pdf", "rb"))
         # Сортирую таблицу экспорта по SKU
         sheet_export_ya.sort_values(by=['Ваш SKU'], inplace=True)
 
-        sheet_sku_data_base = openpyxl.open(FOLDER_FILES_DATA + "sku-data-base.xlsx").active
+        sheet_sku_data_base = openpyxl.open(folder_files_data + "sku-data-base.xlsx").active
         output = PdfFileWriter()
 
         # Массив, в который запишу номера страниц из PDF, которые есть в таблице экспорта
         searched_pages_on_pdf = []
+
+
 
         # Цикл в котором пробегаю по столбцу с номерами заказов из таблицы экспорта
         for i in range(0, len(sheet_export_ya)):
@@ -324,7 +366,7 @@ def uploader_file():
 
         # finally, write "output" to a real file
 
-        outputStream = open(FOLDER_OUTPUT_STREAM, "wb")
+        outputStream = open("/home/avangard3141/mysite/addedindexes.pdf", "wb")
         output.write(outputStream)
         outputStream.close()
         return render_template('download.html')
@@ -334,27 +376,33 @@ def uploader_file():
 def uploadergoogle_file():
     if request.method == 'POST':
 
+        folder_files_saving = "/home/avangard3141/mysite/static/files/"
+        folder_files_data = "/home/avangard3141/mysite/static/data/"
+        folder_white_page = "/home/avangard3141/mysite/static/data/"
+
         f = request.files['file2']
-        f.save(os.path.join(UPLOAD_FOLDER, f.filename))
+        f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
         filename_pdf = f.filename
 
         f1 = request.files['file3']
-        f1.save(os.path.join(UPLOAD_FOLDER, f1.filename))
+        f1.save(os.path.join(app.config['UPLOAD_FOLDER'], f1.filename))
         filename_excel= f1.filename
 
         # Если в первое окно загрузили не тот формат
         if filename_pdf[len(filename_pdf)-3:len(filename_pdf)] == "pdf":
-            sheet_export_ya = pd.read_excel(FOLDER_FILES_SAVE + filename_excel, header=0, skiprows=1)
-            pdf = fitz.open(FOLDER_FILES_SAVE + filename_pdf)
-            existing_pdf = PdfFileReader(open(FOLDER_FILES_SAVE + filename_pdf, "rb"))
+            sheet_export_ya = pd.read_excel(folder_files_saving + filename_excel, header=0, skiprows=1)
+            pdf = fitz.open(folder_files_saving + filename_pdf)
+            existing_pdf = PdfFileReader(open(folder_files_saving + filename_pdf, "rb"))
         else:
-            sheet_export_ya = pd.read_excel(FOLDER_FILES_SAVE + filename_pdf, header=0, skiprows=1)
-            pdf = fitz.open(FOLDER_FILES_SAVE + filename_excel)
-            existing_pdf = PdfFileReader(open(FOLDER_FILES_SAVE + filename_excel, "rb"))
+            sheet_export_ya = pd.read_excel(folder_files_saving + filename_pdf, header=0, skiprows=1)
+            pdf = fitz.open(folder_files_saving + filename_excel)
+            existing_pdf = PdfFileReader(open(folder_files_saving + filename_excel, "rb"))
 
-        white_page = PdfFileReader(open(FOLDER_WHITE_PAGE + "white_page.pdf", "rb"))
+        white_page = PdfFileReader(open(folder_white_page + "white_page.pdf", "rb"))
         # Сортирую таблицу экспорта по SKU
         sheet_export_ya.sort_values(by=['Ваш SKU'], inplace=True)
+
+        # sheet_sku_data_base = openpyxl.open(folder_files_data + "sku-data-base.xlsx").active
 
         # Открываем таблицу
         sh = gc.open_by_url('https://docs.google.com/spreadsheets/d/1Vx9RkLzxtsncULEkd7XsHQgVrcS-dzQSdocZjLp8Uw0/edit#gid=0')
@@ -362,8 +410,19 @@ def uploadergoogle_file():
         worksheet = sh.worksheet('SKU').get_all_records()
         df_sheet_sku_data_base = pd.DataFrame.from_dict(worksheet)
 
-        print("\nТАБЛИЦА СО SKU ИЗ ГУГЛА")
+        print("\nДАТАФРЕЙМ")
         print(df_sheet_sku_data_base.head())
+
+        print("\nПОИСК")
+        print(df_sheet_sku_data_base.loc[df_sheet_sku_data_base['SKU'] == 'SC-A4-1-500as'])
+
+        print("\n УСЛИ")
+        if df_sheet_sku_data_base.loc[df_sheet_sku_data_base['SKU'] == 'SC-A4-1-500as'].empty:
+            print("НИЧЕ")
+        else:
+            print("ЧЕТО ЕСТЬ")
+
+
 
         output = PdfFileWriter()
 
@@ -380,18 +439,26 @@ def uploadergoogle_file():
                 page = pdf.load_page(current_page)
                 # Если я нашел страницу на которой этот номер заказа
                 if page.search_for(search_sku_in_sheet_ya):
-
+                    # print('\n' + '%s найдено на %i странице' % (search_sku_in_sheet_ya, current_page + 1))
                     searched_pages_on_pdf.append(current_page)
 
-                    print("Найдены страницы: ", searched_pages_on_pdf)
+                    # print("Найдены страницы: ", searched_pages_on_pdf)
 
                     # Переменная счетчик, если в базе не будет найдет этот артикул, то подставь оригинальный
                     counter_my = 0
+
+                    # number of rows in dataframe
+                    # num_rows_df_sheet_sku_data_base = df.shape[0]
+
+                    # Беру sku этого заказа и ищу его в базе транслейта
+                    # for j in range(2, num_rows_df_sheet_sku_data_base+1):
 
                     find = df_sheet_sku_data_base.loc[df_sheet_sku_data_base['SKU'] == sheet_export_ya.iloc[i]['Ваш SKU']]
 
                     # Если я нашел этот sku в базе, то пишу его на странице pdf
                     if not find.empty:
+                        print("НАЙДЕТООООО")
+                        print(find.values[0][2])
 
                         packet1 = io.BytesIO()
                         can = canvas.Canvas(packet1, pagesize=letter)
@@ -408,12 +475,13 @@ def uploadergoogle_file():
                             ' шт.)'
                         )
 
-                        # print(
-                        #     str((find.values[0][2])) +
-                        #     ' (' +
-                        #     str(int(sheet_export_ya.iloc[i]['Количество'])) +
-                        #     ' шт.)'
-                        # )
+                        print(
+                            str((find.values[0][2])) +
+                            ' (' +
+                            str(int(sheet_export_ya.iloc[i]['Количество'])) +
+                            ' шт.)'
+                        )
+
 
                         can.save()
 
@@ -428,6 +496,7 @@ def uploadergoogle_file():
                         counter_my = counter_my + 1
 
                     else:
+                        print("я тутутутуту ")
                         packet1 = io.BytesIO()
                         can = canvas.Canvas(packet1, pagesize=letter)
                         pdfmetrics.registerFont(TTFont('Roboto', 'Roboto-Medium.ttf'))
@@ -495,9 +564,7 @@ def uploadergoogle_file():
         df = sheet_export_ya
         # Сводная таблица
         df_pivot = df.pivot_table(values=['Количество'], index='Ваш SKU', aggfunc='sum', margins= True , margins_name='Sum').reset_index()
-
-        print("СВОДНАЯ ТАБЛИЦА ИТОГОВ ДЛЯ PDF")
-        print(df_pivot.head())
+        print(df_pivot)
 
         # Сколько белых страниц понадобится для вывода всей таблицы
         count_white_pages = math.ceil(len(df_pivot)/39)
@@ -575,25 +642,41 @@ def uploadergoogle_file():
                     print(str(df_pivot.iat[total_pivot,0]))
                 else:
                     find = df_sheet_sku_data_base.loc[df_sheet_sku_data_base['SKU'] == str(df_pivot.iat[total_pivot,0])]
+                    # for j in range(2, sheet_sku_data_base.max_row+1):
+                    #     # Если я нашел этот sku в базе, то пишу его на странице pdf
+                    #     if (str(df_pivot.iat[total_pivot,0])) == (sheet_sku_data_base[j][1].value):
+                    #         can_white_page.drawString(
+                    #                 55,
+                    #                 -33 - (line_num  * line_size_white_page),
+                    #                 str(sheet_sku_data_base[j][2].value)
+                    #         )
                     if not find.empty:
+                        print('else')
+                        print(find.values[0])
+
                         if len(find.values[0][2]) > 27:
                             can_white_page.drawString(
-                                        37, 
-                                        -33 - (line_num  * line_size_white_page), 
-                                        find.values[0][2][:27]+'...'   
+                                        37,
+                                        -33 - (line_num  * line_size_white_page),
+                                        find.values[0][2][:27]+'...'
                                 )
                         else:
                             can_white_page.drawString(
-                                        37, 
-                                        -33 - (line_num  * line_size_white_page), 
-                                        find.values[0][2]  
+                                        37,
+                                        -33 - (line_num  * line_size_white_page),
+                                        find.values[0][2]
                                 )
                     else:
                         can_white_page.drawString(
-                                    37, 
-                                    -33 - (line_num  * line_size_white_page), 
-                                    '- - - НЕ НАЙДЕНО - - -'   
+                                    37,
+                                    -33 - (line_num  * line_size_white_page),
+                                    '- - - НЕ НАЙДЕНО - - -'
                             )
+                    # can_white_page.drawString(
+                    #                 55,
+                    #                 -33 - (line_num  * line_size_white_page),
+                    #                 find.values[0][2]
+                    #         )
 
                 # Столбец артикуры изначально (SKU)
                 if total_pivot < len(df_pivot)-1:
@@ -601,13 +684,13 @@ def uploadergoogle_file():
                         can_white_page.drawString(
                             128,
                             -33 - (line_num  * line_size_white_page),
-                            str(df_pivot.iat[total_pivot,0])[:23]+'...'  
+                            str(df_pivot.iat[total_pivot,0])[:23]+'...'
                         )
                     else:
                         can_white_page.drawString(
                             128,
                             -33 - (line_num  * line_size_white_page),
-                            str(df_pivot.iat[total_pivot,0]) 
+                            str(df_pivot.iat[total_pivot,0])
                         )
 
                 # Линии
@@ -630,28 +713,244 @@ def uploadergoogle_file():
             page.mergePage(new_pdf4.getPage(0))
             output.addPage(page)
 
+
         # finally, write "output" to a real file
-        outputStream = open(FOLDER_OUTPUT_STREAM, "wb")
+
+        outputStream = open("/home/avangard3141/mysite/addedindexes.pdf", "wb")
         output.write(outputStream)
         outputStream.close()
         return render_template('download.html')
 
-# Для локалки
+
+
+# @app.route('/uploader', methods = ['GET', 'POST'])
+# def uploader_file():
+#     if request.method == 'POST':
+
+#         folder_files_saving = "/home/avangard3141/mysite/static/files/"
+#         folder_files_data = "/home/avangard3141/mysite/static/data/"
+
+#         f = request.files['file']
+#         f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
+#         filename_pdf = f.filename
+
+#         f1 = request.files['file1']
+#         f1.save(os.path.join(app.config['UPLOAD_FOLDER'], f1.filename))
+#         filename_excel= f1.filename
+
+#         if filename_pdf[len(filename_pdf)-3:len(filename_pdf)] == "pdf":
+#             # sheet_export_ya = openpyxl.open(folder_files_saving + filename_excel).active
+#             sheet_export_ya = pd.read_excel(folder_files_saving + filename_excel, header=0, skiprows=1)
+#             sheet_export_ya.sort_values(by=['Ваш SKU'], inplace=True)
+#             # print(df)
+#             # Имя файла в котором ищу номера ярлыков
+#             pdf = fitz.open(folder_files_saving + filename_pdf)
+#             # read your existing PDF
+#             existing_pdf = PdfFileReader(open(folder_files_saving + filename_pdf, "rb"))
+#         else:
+#             # sheet_export_ya = openpyxl.open(folder_files_saving + filename_pdf).active
+#             sheet_export_ya = pd.read_excel(folder_files_saving + filename_pdf, header=0, skiprows=1)
+#             sheet_export_ya.sort_values(by=['Ваш SKU'], inplace=True)
+#             # Имя файла в котором ищу номера ярлыков
+#             pdf = fitz.open(folder_files_saving + filename_excel)
+#             # read your existing PDF
+#             existing_pdf = PdfFileReader(open(folder_files_saving + filename_excel, "rb"))
+
+#         sheet_sku_data_base = openpyxl.open(folder_files_data + "sku-data-base.xlsx").active
+#         output = PdfFileWriter()
+
+#         # print("ТАК ТАК ТК: " , (sheet_export_ya.max_row))
+
+#         musical_notes = []
+#         for i in range(0, len(sheet_export_ya)):
+#             musical_notes.append(int(sheet_export_ya.iloc[i]['Ваш номер заказа']))
+
+#         c = Counter(musical_notes)
+#         print("И ЧО??????????? - ", c)
+
+#         searched_pages_on_pdf = []
+
+#         # Цикл в котором пробегаю по столбцу с номерами заказов из таблицы экспорта
+#         for i in range(0, len(sheet_export_ya)):
+#             # Переменная, хранящая номер заказа из таблицы экспорта
+#             # search_sku_in_sheet_ya = sheet_export_ya[i][1].value
+#             search_sku_in_sheet_ya = str(sheet_export_ya.iloc[i]['Ваш номер заказа'])
+#             # Цикл в котором пробегаю по каждой странице в pdf и ищу на какой странице этот номер заказа
+#             for current_page in range(len(pdf)):
+#                 page = pdf.load_page(current_page)
+#                 # Если я нашел страницу на которой этот номер заказа
+#                 if page.search_for(search_sku_in_sheet_ya):
+#                     print('\n' + '%s найдено на %i странице' % (search_sku_in_sheet_ya, current_page + 1))
+#                     searched_pages_on_pdf.append(current_page)
+#                     print("Найдены страницы: ", searched_pages_on_pdf)
+#                     # Беру sku этого заказа и ищу его в базе транслейта
+#                     for j in range(2, sheet_sku_data_base.max_row+1):
+#                         # Если я нашел этот sku в базе, то пишу его на странице pdf
+#                         if (sheet_export_ya.iloc[i]['Ваш SKU']) == (sheet_sku_data_base[j][1].value):
+
+#                             # print(
+#                             #     "Это 1: ", (sheet_export_ya[i][3].value),"\n",
+#                             #     "Это 2: ", (sheet_sku_data_base[j][1].value),"\n",
+#                             #     "Это 3: ", str((sheet_sku_data_base[j][2].value)),"\n",
+#                             # )
+
+#                             packet1 = io.BytesIO()
+#                             can = canvas.Canvas(packet1, pagesize=letter)
+#                             pdfmetrics.registerFont(TTFont('Roboto', 'Roboto-Medium.ttf'))
+#                             can.setFont('Roboto', 6)
+#                             can.rotate(90)
+#                             print(
+#                                         "Цикл: " +
+#                                         str(int(i))
+#                                         # ", " +
+#                                         # (sheet_export_ya[i][1].value) +
+#                                         # ", " +
+#                                         # (sheet_export_ya[i+1][1].value)
+#                                     )
+
+#                             can.drawString(
+#                                 120,
+#                                 -338,
+#                                 str((sheet_sku_data_base[j][2].value)) +
+#                                 ' (' +
+#                                 str(int(sheet_export_ya.iloc[i]['Количество'])) +
+#                                 'pcs)'
+#                             )
+#                             print(
+#                                 str((sheet_sku_data_base[j][2].value)) +
+#                                 ' (' +
+#                                 str(int(sheet_export_ya.iloc[i]['Количество'])) +
+#                                 'pcs)'
+#                             )
+
+#                             can.save()
+
+#                             #move to the beginning of the StringIO buffer
+#                             packet1.seek(0)
+#                             new_pdf1 = PdfFileReader(packet1)
+
+#                             # add the "watermark" (which is the new pdf) on the existing page
+#                             page = existing_pdf.getPage(current_page)
+#                             page.mergePage(new_pdf1.getPage(0))
+#                             output.addPage(page)
+#                 # else:
+#                 #     page = existing_pdf.getPage(current_page)
+#                 #     page.mergePage(new_pdf1.getPage(0))
+#                 #     output.addPage(page)
+
+
+#         for current_page in range(len(pdf)):
+#             # for searched_pages in searched_pages_on_pdf:
+#             if current_page not in searched_pages_on_pdf:
+#                 print("Этого нет:",  current_page)
+
+#                 packet3 = io.BytesIO()
+#                 can = canvas.Canvas(packet3, pagesize=letter)
+#                 pdfmetrics.registerFont(TTFont('Roboto', 'Roboto-Medium.ttf'))
+#                 can.setFont('Roboto', 6)
+#                 can.rotate(90)
+
+#                 can.drawString(
+#                     120,
+#                     -338,
+#                     'Нет данных'
+#                 )
+
+#                 can.save()
+
+#                 #move to the beginning of the StringIO buffer
+#                 packet3.seek(1)
+#                 new_pdf3 = PdfFileReader(packet3)
+
+#                 page = existing_pdf.getPage(current_page)
+#                 page.mergePage(new_pdf3.getPage(0))
+#                 output.addPage(page)
+
+
+         # finally, write "output" to a real file
+        # outputStream = open("/home/avangard3141/mysite/addedindexes.pdf", "wb")
+        # output.write(outputStream)
+        # outputStream.close()
+        # return render_template('download.html')
+
+# @app.route('/uploader', methods = ['GET', 'POST'])
+# def uploader_file():
+#     if request.method == 'POST':
+
+#         folder_files_saving = "/home/avangard3141/mysite/static/files/"
+#         folder_files_data = "/home/avangard3141/mysite/static/data/"
+
+
+#         f = request.files['file']
+#         f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
+#         filename_pdf = f.filename
+
+#         f1 = request.files['file1']
+#         f1.save(os.path.join(app.config['UPLOAD_FOLDER'], f1.filename))
+#         filename_excel= f1.filename
+
+#         if filename_pdf[len(filename_pdf)-3:len(filename_pdf)] == "pdf":
+#             sheet_export_ya = openpyxl.open(folder_files_saving + filename_excel).active
+#             # Имя файла в котором ищу номера ярлыков
+#             pdf = fitz.open(folder_files_saving + filename_pdf)
+#             # read your existing PDF
+#             existing_pdf = PdfFileReader(open(folder_files_saving + filename_pdf, "rb"))
+#         else:
+#             sheet_export_ya = openpyxl.open(folder_files_saving + filename_pdf).active
+#             # Имя файла в котором ищу номера ярлыков
+#             pdf = fitz.open(folder_files_saving + filename_excel)
+#             # read your existing PDF
+#             existing_pdf = PdfFileReader(open(folder_files_saving + filename_excel, "rb"))
+
+#         sheet_sku_data_base = openpyxl.open(folder_files_data + "sku-data-base.xlsx").active
+#         output = PdfFileWriter()
+
+#         # Массив в котором ищу на какой странице этот ярлык
+#         for i in range(3, sheet_export_ya.max_row+1):
+#             search_sku_in_sheet_ya = sheet_export_ya[i][1].value
+#             for current_page in range(len(pdf)):
+#                 page = pdf.load_page(current_page)
+
+#                 if page.search_for(search_sku_in_sheet_ya):
+#                     print('%s найдено на %i странице' % (search_sku_in_sheet_ya, current_page + 1))
+
+#                     for j in range(2, sheet_sku_data_base.max_row+1):
+#                         if (sheet_export_ya[i][3].value) == (sheet_sku_data_base[j][1].value):
+#                             print(
+#                                 "Это 1: ", (sheet_export_ya[i][3].value),"\n",
+#                                 "Это 2: ", (sheet_sku_data_base[j][1].value),"\n",
+#                                 "Это 3: ", str((sheet_sku_data_base[j][2].value)),"\n",
+#                             )
+
+#                             packet1 = io.BytesIO()
+#                             can = canvas.Canvas(packet1, pagesize=letter)
+#                             pdfmetrics.registerFont(TTFont('Roboto', 'Roboto-Medium.ttf'))
+#                             can.setFont('Roboto', 6)
+
+#                             can.rotate(90)
+#                             can.drawString(120, -338, str((sheet_sku_data_base[j][2].value)) + ' (' + str(int(sheet_export_ya[i][5].value)) + 'pcs)')
+#                             can.save()
+
+#                             #move to the beginning of the StringIO buffer
+#                             packet1.seek(0)
+#                             new_pdf1 = PdfFileReader(packet1)
+
+#                             # add the "watermark" (which is the new pdf) on the existing page
+#                             page = existing_pdf.getPage(current_page)
+#                             page.mergePage(new_pdf1.getPage(0))
+#                             output.addPage(page)
+
+#          # finally, write "output" to a real file
+#         outputStream = open("/home/avangard3141/mysite/addedindexes.pdf", "wb")
+#         output.write(outputStream)
+#         outputStream.close()
+#         return render_template('download.html')
+
+
 @app.route('/download')
 def download():
-    dist_dir = 'C:/Users/79858/Documents/1-git/Ya-Market-Web-App/'
-    entry = os.path.join(dist_dir, 'addedindexes.pdf')
-    return send_file(entry, as_attachment=True)
-
-
-# Для pythonanywhere
-# @app.route('/download')
-# def download():
-#     filename = 'addedindexes.pdf'
-#     return send_file(filename,as_attachment=True)
-
+    filename = 'addedindexes.pdf'
+    return send_file(filename,as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug = True)
-
-    
+    app.run(host="0.0.0.0", port=5000)

@@ -2,6 +2,138 @@
 {% block content %}
 {{ super () }}
 
-<p>Главная</p>
+
+<div style="display: flex;  justify-content: center">
+    <!-- <div class="container_form_load">
+        <div class="form_load" style="z-index: 10000;">
+            <p>SKU из Экселя</p>
+            <form class="form-contact2" action="/uploader" method="POST" enctype="multipart/form-data"
+                style="flex-direction: column">
+
+                <label class="input-file">
+                    <span class="input-file-text" type="text"></span>
+                    <input type="file" id="file" name="file" required>
+                    <span class="input-file-btn">Файл PDF</span>
+                </label>
+
+                <label class="input-file">
+                    <span class="input-file-text" type="text"></span>
+                    <input type="file" id="file1" name="file1" title="123" required>
+                    <span type="file" name="file1" class="input-file-btn">Файл EXCEL</span>
+                </label>
+
+                <p></p>
+
+                <button class="buttonn" style="display:flex; z-index: 10000;" type="submit" onclick="myFunction()">
+                    <div id="button_magic">Сделать магию</div>
+                    <div id="loader" style="display:none;" class="donut"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+    <div style="width: 30px;"></div> -->
+    <div class="container_form_load">
+        <div class="form_load" style="z-index: 10000;">
+            <!-- <p>SKU из Гугла</p> -->
+            <form class="form-contact2" action="/uploadergoogle" method="POST" enctype="multipart/form-data"
+                style="flex-direction: column">
+
+                <label class="input-file">
+                    <span class="input-file-text" type="text"></span>
+                    <input type="file" id="file3" name="file3" required>
+                    <span class="input-file-btn">Файл PDF</span>
+                </label>
+
+                <label class="input-file">
+                    <span class="input-file-text" type="text"></span>
+                    <input type="file" id="file2" name="file2" title="123" required>
+                    <span type="file" name="file2" class="input-file-btn">Файл EXCEL</span>
+                </label>
+
+                <p></p>
+
+                <!-- <button id="button_magic" class="buttonn" style="display:flex;" type="submit" onclick="myFunction()">
+                    Сделать магию
+                </button>
+    
+                <button id="loader" style="display:none;" class="buttonn" type="submit">
+                    <div class="donut"></div>
+                </button> -->
+
+                <button class="buttonn" style="display:flex; z-index: 10000;" type="submit" onclick="myFunction2()">
+                    <div id="button_magic2">Сделать магию</div>
+                    <div id="loader2" style="display:none;" class="donut"></div>
+                </button>
+
+
+                <!-- <button class="buttonn" type="submit"> -->
+
+                <!-- </button> -->
+
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="area">
+    <ul class="circles">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+    </ul>
+</div>
+
+<script src="https://snipp.ru/cdn/jquery/2.1.1/jquery.min.js"></script>
+
+<script>
+    var myVar;
+
+    function myFunction() {
+
+        if ((document.getElementById("file").value.length == 0) || (document.getElementById("file1").value.length == 0)) {
+            alert("ВЫБЕРИТЕ ФАЙЛЫ!")
+        } else {
+            document.getElementById("loader").style.display = "flex";
+            document.getElementById("button_magic").style.display = "none";
+        }
+
+    }
+
+    function myFunction2() {
+
+        if ((document.getElementById("file2").value.length == 0) || (document.getElementById("file3").value.length == 0)) {
+            alert("ВЫБЕРИТЕ ФАЙЛЫ!")
+        } else {
+            document.getElementById("loader2").style.display = "flex";
+            document.getElementById("button_magic2").style.display = "none";
+        }
+
+    }
+
+    $('.input-file input[type=file]').on('change', function () {
+        let file = this.files[0];
+        if (file.name.length > 30) {
+            $(this).closest('.input-file').find('.input-file-text').html(
+                file.name.substr(0, 15) +
+                "  ...  " +
+                file.name.substr(file.name.length - 14, 14)
+            );
+        } else {
+            $(this).closest('.input-file').find('.input-file-text').html(
+                file.name
+            );
+        }
+
+    });
+</script>
+
 
 {% endblock %}
